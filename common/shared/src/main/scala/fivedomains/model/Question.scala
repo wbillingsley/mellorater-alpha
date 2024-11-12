@@ -97,7 +97,7 @@ val allQuestions:Seq[(QuestionSection, Seq[Question])] = Seq(
     ),
     Domain.Health -> Seq(
         Question(QuestionIdentifier.InjuriesDisease.ordinal, Domain.Health, { 
-            (a:Animal) => s"${a.name} has no injuries, nor signs of disease" },
+            (a:Animal) => s"${a.name} has no injuries, signs of illness or disease" },
             (a:Animal) => s"Is ${a.name} in good health, with no indication of existing disease or injury, based on your general understanding of good and ill-health that could impact ${a.name}'s experience.",
             (_) => """This does not replace either a professional exam nor expert advice in any way. Veterinarians are essential members of your animal’s health support team"""
         ),
@@ -132,7 +132,7 @@ Such ‘blind spots’ can happen because we become habituated or desensitised. 
     ),
     Domain.InteractionsSocial -> Seq(
         Question(QuestionIdentifier.SameSpeciesInteraction.ordinal, Domain.InteractionsSocial, { 
-            (a:Animal) => s"${a.name} can choose how long they spend interacting with other ${a.species.plural}." },
+            (a:Animal) => s"${a.name} can choose how they interact with other ${a.species.plural}." },
             (a:Animal) => s"Does ${a.name} have the capacity to choose if, when and how they interact with other ${a.species.plural}? Do they make use of available opportunities to spend time with other ${a.species.plural}?",
             (_) => """Retrieving data. Wait a few seconds and try to cut or copy again.By observing the choices the animal makes and their behaviour towards others, you can learn a lot about their subjective experience - and whether the interactions they engage in are giving rise to negative, neutral or positive experiences at least at the time of the assessment."""
         ),

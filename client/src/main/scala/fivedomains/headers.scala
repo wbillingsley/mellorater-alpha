@@ -250,12 +250,12 @@ def fullLogo = imageFile("logo full.png", "Mellorator logo")
 
 
 
-def logo =
-    import html.* 
-    import assessments.*
-    assessments.sevenBox(
-        (for d <- Domain.values yield d -> (d.color, <.div())).toMap
-    )
+// def logo =
+//     import html.* 
+//     import assessments.*
+//     assessments.sevenBox(
+//         (for d <- Domain.values yield d -> (d.color, <.div())).toMap
+//     )
 
 /**
   * The header that goes at the top of the front page

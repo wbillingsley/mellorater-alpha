@@ -94,6 +94,41 @@ def stronglyAgreeSlider(value:AnswerValue.Numeric)(update: (AnswerValue) => Unit
     )
 }
 
+val likertStyle = Styling(
+    """
+      |display: flex;
+      |justify-content: space-between;
+      |align-items: center;
+      |margin: 1em;
+      |""".stripMargin
+).modifiedBy(
+    " input[type='radio']" -> "appearance: none; border-radius: 50%; border: 0.15em solid; width: 2em; height: 2em; margin: 0;",
+    " input[type='radio'].StronglyDisagree" -> s"border-color: $darkPurple",
+    " input[type='radio'].Disagree" -> s"border-color: $lavender",
+    " input[type='radio'].Neutral" -> s"border-color: $orange",
+    " input[type='radio'].Agree" -> s"border-color: $lightGreen",
+    " input[type='radio'].StronglyAgree" -> s"border-color: $darkGreen",
+    " input[type='radio']:checked.StronglyDisagree" -> s"background: $darkPurple",
+    " input[type='radio']:checked.Disagree" -> s"background: $lavender",
+    " input[type='radio']:checked.Neutral" -> s"background: $orange",
+    " input[type='radio']:checked.Agree" -> s"background: $lightGreen",
+    " input[type='radio']:checked.StronglyAgree" -> s"background: $darkGreen",
+).register()
+
+/** A slider for strongly agree / strongly disagree */
+def likertScale(name:String, value:AnswerValue.Numeric)(update: (AnswerValue) => Unit) = {
+    import html.*
+    <.div(^.cls := likertStyle, ^.style := "text-align: center; display: flex; justify-content: space-between",
+
+        <.label(^.cls := "sd", "Strongly disagree"),
+        // <.span(,
+            (for agr <- Agreement.values.toSeq yield 
+                    <.input(^.attr.`type` := "radio", ^.attr.name := name, ^.cls := agr.toString(), if value.agreement == agr then ^.prop.checked := true else ^.prop.checked := false, ^.on.change --> { update(AnswerValue.Numeric((agr.ordinal * 25).toDouble)) }) 
+        ),
+        <.label(^.cls := "sa", "Strongly agree"),
+    )
+}
+
 /** A picker for Very Poor to Very Good */
 def ratingPicker(value:AnswerValue.Rated)(update: (AnswerValue) => Unit) = {
     import html.*
@@ -202,7 +237,8 @@ case class AssessmentForm(animal:Animal) extends DHtmlComponent {
                             
                             ans.value match {
                                 case AnswerValue.Numeric(v) => 
-                                    stronglyAgreeSlider(AnswerValue.Numeric(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
+                                    likertScale("q" + q.num, AnswerValue.Numeric(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
+                                    //stronglyAgreeSlider(AnswerValue.Numeric(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
                                 case AnswerValue.Rated(v) => 
                                     ratingPicker(AnswerValue.Rated(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
                             },                            

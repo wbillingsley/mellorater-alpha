@@ -6,6 +6,7 @@ import html.{Styling, VHtmlContent, DHtmlComponent, <, ^, EventMethods, DHtmlMod
 import fivedomains.{given, *}
 import model.*
 import typings.std.stdStrings.s
+import typings.std.stdStrings.window
 
 val surveyQstyle = Styling(
     """"""
@@ -61,10 +62,10 @@ enum FooterSelection:
 def confidenceSlider(confidence:Confidence)(update: (Confidence) => Unit) = {
     import html.{<, ^}
 
-    <.div(^.style := "text-align: center; margin: 1em;", ^.cls := confidenceSliderStyle,
-        <.h4(^.cls := "conf", "Confidence"),
-        <.p("This lets you mark cases where there is unusually weak or strong evidence to make a conclusion"),
-        <.div(
+    <.div(^.style := "margin: 1em;", ^.cls := confidenceSliderStyle,
+        // <.h4(^.cls := "conf", "Confidence"),
+        <.p("How confident are you in this assessment?"),
+        <.div(^.style := "text-align: center; ",
             <.label(^.cls := "sd", "Low"),
             <.input(^.attr("type") := "range", 
                 ^.prop.value := (confidence.value * 100).floor.toString,
@@ -116,14 +117,14 @@ val likertStyle = Styling(
 ).register()
 
 /** A slider for strongly agree / strongly disagree */
-def likertScale(name:String, value:AnswerValue.Numeric)(update: (AnswerValue) => Unit) = {
+def likertScale(name:String, value:Option[AnswerValue.Numeric])(update: (AnswerValue) => Unit) = {
     import html.*
     <.div(^.cls := likertStyle, ^.style := "text-align: center; display: flex; justify-content: space-between",
 
         <.label(^.cls := "sd", "Strongly disagree"),
         // <.span(,
             (for agr <- Agreement.values.toSeq yield 
-                    <.input(^.attr.`type` := "radio", ^.attr.name := name, ^.cls := agr.toString(), if value.agreement == agr then ^.prop.checked := true else ^.prop.checked := false, ^.on.change --> { update(AnswerValue.Numeric((agr.ordinal * 25).toDouble)) }) 
+                    <.input(^.attr.`type` := "radio", ^.attr.name := name, ^.cls := agr.toString(), if value.exists(_.agreement == agr) then ^.prop.checked := true else ^.prop.checked := false, ^.on.change --> { update(AnswerValue.Numeric((agr.ordinal * 25).toDouble)) }) 
         ),
         <.label(^.cls := "sa", "Strongly agree"),
     )
@@ -237,7 +238,7 @@ case class AssessmentForm(animal:Animal) extends DHtmlComponent {
                             
                             ans.value match {
                                 case AnswerValue.Numeric(v) => 
-                                    likertScale("q" + q.num, AnswerValue.Numeric(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
+                                    likertScale("q" + q.num, Some(AnswerValue.Numeric(v))) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
                                     //stronglyAgreeSlider(AnswerValue.Numeric(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
                                 case AnswerValue.Rated(v) => 
                                     ratingPicker(AnswerValue.Rated(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
@@ -354,7 +355,16 @@ case class PagedAssessmentForm(animal:Animal) extends DHtmlComponent {
         ),
 
         <.p(^.style := "margin: 1em;",
-            s"Thinking of ${animal.name}, what is your level of agreement with each of the following statements",
+            s"In this assessment, you're going to be asked 18 questions about ${animal.name}. Each page of 3 questions fills out a different domain around the circle.",
+        ),
+
+        scoringInProgress(assessment.value, Domain.Mental),
+
+        <.p(^.style := "margin: 1em;",
+            s"Your answers will also be shown as coloured squares in the tracks beside the circle.",
+        ),
+        <.p(^.style := "margin: 1em;",
+            s"You can also record notes against each question.",
         ),
 
         <.p(^.style := "margin: 1em;",
@@ -372,27 +382,59 @@ case class PagedAssessmentForm(animal:Animal) extends DHtmlComponent {
         val maxQNum = dqs.map(_.num).max
 
         <.div(
-            leftBlockHeader(
-                Router.path(AppRoute.Front),
-                "Assessment",
-                <.label(^.cls := (animalName), animal.name)
+            // leftBlockHeader(
+            //     Router.path(AppRoute.Front),
+            //     "Assessment",
+            //     <.label(^.cls := (animalName), animal.name)
+            // ),
+
+
+            <.div(^.style := "position: sticky; top: 0; background: white;", 
+                <.div(scoringInProgress(assessment.value, domain))
             ),
 
-            scoringInProgress(assessment.value, domain),
-
             <.div(^.cls := (surveyQstyle),
-                <.div(^.style := s"padding: 5px 1em; background: ${domain.color}",                    
-                    <.label(^.style := "color: white", domainLogo(domain), domain.title),
+                
+                <.div(^.style := s"padding: 5px 1em;",                    
+                    <.h3(^.style := "color: black", domain.title),
                 ),
+
+                <.p(^.style := "margin: 1em;",
+                    s"Thinking of ${animal.name}, what is your level of agreement with each of the following statements?",
+                ),
+
 
                 <.div(             
                     for q <- domainQuestions(domain) yield
                         assessment.value.answers.get(q.num) match {
                             case None => 
-                                <.div()
+                                val ans = q.defaultAnswer
+
+                                <.div(^.style := s"border-top: 1px solid ${domain.color}", ^.attr("id") := s"question${q.num}",
+                                    <.div(^.style := "margin: 1em;",
+                                        <.h4(q.headline(animal)),
+                                        // <.p(q.shortExplanation(animal)) 
+                                    ),                            
+                                    
+                                    likertScale("q" + q.num, None) { v => assessment.value = assessment.value.copy(answers = assessment.value.answers.updated(q.num, ans.copy(value = v))) },
+ 
+                                    // Mid-space controls
+
+                                    <.p(^.style := "margin: 1em;", " "),
+
+                                    // Footer controls
+                                    <.div(^.cls := questionFooterStyle,
+                                        <.span(),
+
+                                        if q.num < maxQNum then <.div(^.style := "text-align: right; margin: 1em;",
+                                            <.button(^.cls := (button), "Next ↓", ^.onClick --> scrollQIntoView(q.num + 1))
+                                        ) else Seq()                 
+                                    )
+                                    
+                                )
 
                             case Some(ans) =>
-                                <.div(^.style := s"border-bottom: 1px solid ${domain.color}", ^.attr("id") := s"question${q.num}",
+                                <.div(^.style := s"border-top: 1px solid ${domain.color}", ^.attr("id") := s"question${q.num}",
                                     <.div(^.style := "margin: 1em;",
                                         <.h4(q.headline(animal)),
                                         // <.p(q.shortExplanation(animal)) 
@@ -400,16 +442,16 @@ case class PagedAssessmentForm(animal:Animal) extends DHtmlComponent {
                                     
                                     ans.value match {
                                         case AnswerValue.Numeric(v) => 
-                                            <.span() // stronglyAgreeSlider(AnswerValue.Numeric(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
+                                            likertScale("q" + q.num, Some(AnswerValue.Numeric(v))) { v => assessment.value = assessment.value.copy(answers = assessment.value.answers.updated(q.num, ans.copy(value = v))) }
                                         case AnswerValue.Rated(v) => 
                                             <.span()// ratingPicker(AnswerValue.Rated(v)) { v => answers.value = answers.value.updated(q.num, ans.copy(value = v)) }
-                                    },                            
+                                    },    
+
+                                    confidenceSlider(ans.confidence) { c => assessment.value = assessment.value.copy(answers = assessment.value.answers.updated(q.num, ans.copy(confidence = c))) },                        
 
                                     <.div(^.style := "text-align: center", {
                                         footerSelectors(q.num).value match {
                                             case FooterSelection.None => Seq()
-                                            case FooterSelection.Confidence => 
-                                                confidenceSlider(ans.confidence) { c => assessment.value = assessment.value.copy(answers = assessment.value.answers.updated(q.num, ans.copy(confidence = c))) }
                                             case FooterSelection.Explanation => 
                                                 <.div(^.style := "margin: 1em; text-align: left;", 
                                                     q.shortExplanation(animal)
@@ -436,8 +478,8 @@ case class PagedAssessmentForm(animal:Animal) extends DHtmlComponent {
                                     <.p(^.style := "margin: 1em;", " "),
 
                                     // Footer controls
-                                    <.div(^.cls := questionFooterStyle,
-                                        confidenceButton(assessment.value.answers(q.num).confidence, footerSelectors(q.num)),
+                                    <.div(^.cls := questionFooterStyle,                                         
+                                        // confidenceButton(assessment.value.answers(q.num).confidence, footerSelectors(q.num)),
                                         footerButton(footerSelectors(q.num), "?", FooterSelection.Explanation),
                                         footerButton(footerSelectors(q.num), <.span(^.cls := "material-symbols-outlined", "edit_note"), FooterSelection.Notes),
                                     // footerButton(footerSelectors(q.num), <.span(^.cls := "material-symbols-outlined", "photo_camera"), FooterSelection.Photo),
@@ -456,9 +498,29 @@ case class PagedAssessmentForm(animal:Animal) extends DHtmlComponent {
 
             ),
 
-            <.div(^.style := "text-align: right; margin: 1em;",
-                <.button(^.cls := (button, primary), "Submit", ^.onClick --> submit())
-            )
+            if domain == Domain.scoredDomains.last then 
+                <.div(^.style := "text-align: right; margin: 1em;",
+                    <.button(^.cls := (button, primary), "Back", ^.onClick --> { page.value = Page.DomainPage(Domain.fromOrdinal(domain.ordinal - 1)) }),
+                    <.button(^.cls := (button, primary), "Submit", ^.onClick --> submit())
+                )
+            else if domain == Domain.scoredDomains.head then 
+                <.div(^.style := "text-align: right; margin: 1em;",
+                    <.button(^.cls := (button, primary), "Back", ^.onClick --> { page.value = Page.SituPage }),
+                    <.button(^.cls := (button, primary), "Next page", ^.onClick --> { 
+                        page.value = Page.DomainPage(Domain.fromOrdinal(domain.ordinal + 1))
+                        org.scalajs.dom.window.scrollTo(0, 0); 
+                    })
+                )
+            else    
+                <.div(^.style := "text-align: right; margin: 1em;",
+                    <.button(^.cls := (button, primary), "Back", ^.onClick --> { page.value = Page.DomainPage(Domain.fromOrdinal(domain.ordinal - 1)) }),
+                    <.button(^.cls := (button, primary), "Next page", ^.onClick --> { 
+                        page.value = Page.DomainPage(Domain.fromOrdinal(domain.ordinal + 1))
+                        org.scalajs.dom.window.scrollTo(0, 0); 
+                    })
+                ),
+
+            <.div(^.style := "padding-bottom: 150px"), // so that opening the footer on the bottom question doesn't push the controls off the screen 
         )
 
 
@@ -478,4 +540,4 @@ case class PagedAssessmentForm(animal:Animal) extends DHtmlComponent {
  */
 def assessmentPage(aId: AnimalId) = 
     val a = DataStore.animal(aId)
-    assessments.AssessmentForm(a)
+    assessments.PagedAssessmentForm(a)

@@ -46,7 +46,7 @@ def rosetteAndSides(rosette:svg.DSvgContent)(data: Map[Domain, (String, svg.DSvg
     val centreW = (Math.sqrt(Math.pow(circleR, 2) - Math.pow(centreH / 2, 2)) * 2).toInt
 
     def emptyContent = SVG.g()
-    def emptyCol = "gainsboro"
+    val emptyCol = "gainsboro" // the colour of an empty domain track
 
     /** Aligns boxes on top of each other. */
     def stackBoxes(data: Seq[(Domain, (String, DSvgContent))], left:Boolean) = {
@@ -56,7 +56,7 @@ def rosetteAndSides(rosette:svg.DSvgContent)(data: Map[Domain, (String, svg.DSvg
             sparkbox(col, boxW, boxH(index))(
                 ^.attr("x") := 0,//(if left then 0 else boxW + gap), 
                 ^.attr("y") := 0, //(index * (boxH + gap)),
-                ^.attr.style := s"fill: $cream"
+                // ^.attr.style := s"fill: $cream"
             ),
             domainLogoSvg(domain)(^.style := s"fill: $darkCream; font-size: 55px; dominant-baseline: central; text-anchor: middle;",  
                 ^.attr.y := boxH(index) / 2, 
@@ -125,7 +125,7 @@ def scoringRose(assessments:Seq[Assessment]) =
             rosette(((for 
                 d <- Domain.scoredDomains 
             yield 
-                d -> (Seq(^.style := s"fill: ${scoreColor(a.categoryScore(d))}"), Seq(domainLogoSvg(d)(^.style := "fill: white; font-size: 55px; text-anchor: middle; dominant-baseline: central;")))
+                d -> (Seq(^.style := s"fill: ${scoreColor(a.categoryScore(d))}"), Seq(domainLogoSvg(d, classes="domain-rosette-logo")))
             ) :+ (
                 Domain.Mental -> (Seq(^.style := s"fill: $cream"), Seq(colouredScoreFace(a.overallScore)(^.attr.width := 100, ^.attr.height := 100, ^.attr.x := -50, ^.attr.y := -50)))            
             )).toMap)
@@ -133,33 +133,41 @@ def scoringRose(assessments:Seq[Assessment]) =
             rosette(((for 
                 d <- Domain.scoredDomains 
             yield 
-                d -> (Seq(^.style := s"fill: $darkCream"), Seq(domainLogoSvg(d)(^.style := "fill: white; font-size: 55px; text-anchor: middle; dominant-baseline: central;")))
+                d -> (Seq(^.style := s"fill: $darkCream"), Seq(domainLogoSvg(d, classes="domain-rosette-logo")))
             ) :+ (
                 Domain.Mental -> (Seq(^.style := s"fill: $cream"), Seq(neutral("darkCream")(^.attr.width := 100, ^.attr.height := 100, ^.attr.x := -50, ^.attr.y := -50)))
             )).toMap)
 
     }
 
-    rosetteAndSides(ros)((for d <- Domain.values yield d -> ("", domainTrack(d, assessments))).toMap)(^.style := "")
+    rosetteAndSides(ros)((for d <- Domain.values yield d -> (cream, domainTrack(d, assessments))).toMap)(^.style := "")
 
 
-// def rosetteInProgress(assessment:Assessment, activeDomain:Domain) = 
-//     import html.* 
+/** Used to show a scoring rose as an assessment is being recorded */
+def scoringInProgress(assessment:Assessment, activeDomain:Domain) = 
+    import html.* 
 
-//     rosette(((for 
-//                 d <- Domain.scoredDomains 
-//             yield 
-//                 d -> (Seq(^.style := s"fill: ${scoreColor(a.categoryScore(d))}"), Seq(domainLogoSvg(d)(^.style := "fill: white; font-size: 55px;", ^.attr("text-anchor") := "middle", ^.attr("dominant-baseline") := "middle")))
-//             ) :+ (
-//                 Domain.Mental -> (Seq(^.style := s"fill: $cream"), Seq(colouredScoreFace(a.overallScore)(^.attr.width := 100, ^.attr.height := 100, ^.attr.x := -50, ^.attr.y := -50)))            
-//             )).toMap)
+    val ros = rosette(((for 
+                d <- Domain.scoredDomains 
+            yield 
+                if d == activeDomain then 
+                    d -> (Seq(^.style := s"fill: cornflowerblue;"), Seq(domainLogoSvg(d, classes="domain-rosette-logo")))
+                else 
+                    d -> (Seq(^.style := s"fill: lightGray;"), Seq(domainLogoSvg(d, classes="domain-rosette-logo")))
+            ) :+ (
+                Domain.Mental -> (Seq(^.style := s"fill: $cream"), Seq.empty)            
+            )).toMap)
+
+    rosetteAndSides(ros)((for d <- Domain.values yield d -> (if d == activeDomain then cream else cream, domainTrack(d, Seq(assessment)))).toMap)(^.style := "")            
+
+
 
 
 val rosetteStyling = Styling(
     """|
        |""".stripMargin
 ).modifiedBy(
-    " .domain-track-logo" -> "fill: white; font-size: 55px; text-anchor: middle; dominant-baseline: central;",
+    " .domain-rosette-logo" -> "fill: white; font-size: 55px; text-anchor: middle; dominant-baseline: central;",
     "  .segment-path" -> "stroke: white; stroke-width: 7",
     "  .segment-path.dimmed" -> s"fill: $cream"
     // " .segment" -> "filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.7));",
@@ -203,16 +211,18 @@ def domainTrack(d:Domain, assessments:Seq[Assessment]):svg.DSvgContent =
             alpha = alpha * 0.85
             for (ans, i) <- a.answersInDomain(d).zipWithIndex yield {
                 rect(^.attr.x := x, ^.attr.y := y0 + i * (cellSize + cellGap), ^.attr.width := cellSize, ^.attr.height := cellSize, ^.attr.rx := 5,
-                ^.style := f"fill: ${scoreColor(ans.value.asDouble)}; opacity: $alpha%2.1f;"
+                ^.style := f"fill: ${scoreColor(Some(ans.value.asDouble))}; opacity: $alpha%2.1f;"
                 
                 )
             }
         ).flatten,
 
-        line(
-            ^.attr.x1 := 2 * xIncr + xIncr/8, ^.attr.x2 := 2 * xIncr + xIncr/8, ^.attr.y1 := y0 - cellGap, ^.attr.y2 := y0 + 3 * (cellSize + cellGap), 
-            ^.attr.style := s"stroke: $darkCream; stroke-width: 2px;"
-        )
+        if assessments.length > 1 then 
+            line(
+                ^.attr.x1 := 2 * xIncr + xIncr/8, ^.attr.x2 := 2 * xIncr + xIncr/8, ^.attr.y1 := y0 - cellGap, ^.attr.y2 := y0 + 3 * (cellSize + cellGap), 
+                ^.attr.style := s"stroke: $darkCream; stroke-width: 2px;"
+            )
+        else None
     )
 
 

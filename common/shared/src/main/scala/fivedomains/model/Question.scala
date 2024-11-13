@@ -20,7 +20,7 @@ case class Question(num:Int, domain:Domain,
 
 }
 
-type QuestionSection = Domain
+// type QuestionSection = Domain
 
 enum QuestionType derives upickle.default.ReadWriter:
     case StronglyAgreeSlider
@@ -48,7 +48,7 @@ enum QuestionIdentifier:
     case FamiliarPeople
     case CalmWithPeople
 
-val allQuestions:Seq[(QuestionSection, Seq[Question])] = Seq(
+val allQuestions:Seq[(Domain, Seq[Question])] = Seq(
     Domain.Mental -> Seq(
         Question(0, Domain.Mental, { 
             (a:Animal) => s"Overall, how would you rate ${a.name}'s wellbeing?" }, 

@@ -31,50 +31,64 @@ val fgVeryGood = "hsl(124, 29%, 31%)"
 
 
 /** Which colour to mark up a score in */
-def scoreColor(x:Double) =
-    if x < 20 then veryPoor
-    else if x < 40 then poor
-    else if x < 60 then neutral
-    else if x < 80 then good
-    else veryGood
+def scoreColor(x:Option[Double]) = x match
+    case None => 
+        "lightGray"
 
-def scoreColorClassName(x:Double) =
-    if x < 20 then "darkPurple"
-    else if x < 40 then "lavender"
-    else if x < 60 then "orange"
-    else if x < 80 then "lightGreen"
-    else "darkGreen"
+    case Some(x) =>
+        if x < 20 then veryPoor
+        else if x < 40 then poor
+        else if x < 60 then neutral
+        else if x < 80 then good
+        else veryGood
+
+def scoreColorClassName(x:Option[Double]) = x match
+    case None => "lightGray"
+    case Some(x) => 
+        if x < 20 then "darkPurple"
+        else if x < 40 then "lavender"
+        else if x < 60 then "orange"
+        else if x < 80 then "lightGreen"
+        else "darkGreen"
         
-def colouredScoreFace(x:Double) = 
-    if x < 40 then 
+def colouredScoreFace(x:Option[Double]) = x match
+    case None => 
+        // TODO: Find a different face for unscored
         unhappy(scoreColorClassName(x))
-    else if x < 60 then 
-        neutral(scoreColorClassName(x))
-    else 
-        happy(scoreColorClassName(x))
 
-def creamFace(x:Double) = 
-    if x < 40 then 
-        unhappy("cream")
-    else if x < 60 then 
-        neutral("cream")
-    else 
-        happy("cream")
+    case Some(v) => 
+        if v < 40 then 
+            unhappy(scoreColorClassName(x))
+        else if v < 60 then 
+            neutral(scoreColorClassName(x))
+        else 
+            happy(scoreColorClassName(x))
 
-def boxedScoreFaceHtml(score:Double) = 
+def creamFace(x:Option[Double]) = x match
+    case None => 
+        neutral("lightGray")
+    case Some(x) =>
+        if x < 40 then 
+            unhappy("cream")
+        else if x < 60 then 
+            neutral("cream")
+        else 
+            happy("cream")
+
+def boxedScoreFaceHtml(score:Option[Double]) = 
     import html.* 
     <.div(
         ^.attr.style := s"display: inline-block; background: ${scoreColor(score)}; border: 1px solid $cream; border-radius: 5px; padding: 0;",
         creamFace(score)(^.attr.width := 30, ^.attr.height := 25) 
     )
 
-def unboxedDomainLogo(d:Domain, score:Double) = 
+def unboxedDomainLogo(d:Domain, score:Option[Double]) = 
     import html.* 
     <.div(^.style := s"color: ${scoreColor(score)}",
         domainLogo(d) 
     )
 
-def boxedDomainLogo(d:Domain, score:Double) = 
+def boxedDomainLogo(d:Domain, score:Option[Double]) = 
     import html.* 
     <.div(
         ^.attr.style := s"display: inline-block; background: ${scoreColor(score)}; border: 1px solid $cream; border-radius: 5px; padding: 0;",
@@ -99,6 +113,8 @@ val faceStyling = Styling("").modifiedBy(
     ".darkGreen .mouth" -> s"stroke: $darkGreen",
     ".lightGreen .eye" -> s"fill: $lightGreen",
     ".lightGreen .mouth" -> s"stroke: $lightGreen",
+    ".lightGray .eye" -> s"fill: lightGray",
+    ".lightGray .mouth" -> s"stroke: lightGray",
 ).register()
 
 def happy(colour:String) = 
@@ -139,16 +155,16 @@ def domainLogo(d:Domain):VHtmlContent =
         case Domain.Mental => <.span(^.cls := "material-symbols-outlined", "planner_review")
     }
 
-def domainLogoSvg(d:Domain) = 
+def domainLogoSvg(d:Domain, classes:String = "") = 
     import html.*
     d match {
-        case Domain.Environment => SVG.text(^.cls := "material-symbols-outlined", "\uf172" /*"partly_cloudy_day" */)
-        case Domain.Health => SVG.text(^.cls := "material-symbols-outlined", "\uf6e9" /* ecg_heart */)
-        case Domain.Nutrition => SVG.text(^.cls := "material-symbols-outlined", "\ue110" /* "nutrition" */)
-        case Domain.InteractionsEnvironment => SVG.text(^.cls := "material-symbols-outlined", "\ue406" /* "nature" */)
-        case Domain.InteractionsSocial => SVG.text(^.cls := "material-symbols-outlined", "\ue9a7" /* "spoke" */)
-        case Domain.InteractionsHuman => SVG.text(^.cls := "material-symbols-outlined", "\ue7fd" /* "person" */)
-        case Domain.Mental => SVG.text(^.cls := "material-symbols-outlined",  "\ue694" /* "planner_review" */)
+        case Domain.Environment => SVG.text(^.cls := "material-symbols-outlined " + classes, "\uf172" /*"partly_cloudy_day" */)
+        case Domain.Health => SVG.text(^.cls := "material-symbols-outlined " + classes, "\uf6e9" /* ecg_heart */)
+        case Domain.Nutrition => SVG.text(^.cls := "material-symbols-outlined " + classes, "\ue110" /* "nutrition" */)
+        case Domain.InteractionsEnvironment => SVG.text(^.cls := "material-symbols-outlined " + classes, "\ue406" /* "nature" */)
+        case Domain.InteractionsSocial => SVG.text(^.cls := "material-symbols-outlined " + classes, "\ue9a7" /* "spoke" */)
+        case Domain.InteractionsHuman => SVG.text(^.cls := "material-symbols-outlined " + classes, "\ue7fd" /* "person" */)
+        case Domain.Mental => SVG.text(^.cls := "material-symbols-outlined " + classes,  "\ue694" /* "planner_review" */)
     }
 
 

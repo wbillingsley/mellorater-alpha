@@ -39,7 +39,7 @@ def currentRedFlags(assess:Assessment) =
             <.h4(d.title),
             for a <- assess.lowAnswers if a.question.domain == d yield <.div(
                 <.h5(
-                    <.div(^.style := "float: left; margin-right: 10px; margin-top: 2px;", boxedScoreFaceHtml(a.value.asDouble)), 
+                    <.div(^.style := "float: left; margin-right: 10px; margin-top: 2px;", boxedScoreFaceHtml(Some(a.value.asDouble))), 
                     a.question.headline(animal)
                 ),
                 
@@ -85,7 +85,7 @@ def pastRedFlags(assessments:Seq[Assessment], mode:AnswerFilter):DHtmlModifier =
                                         unboxedDomainLogo(a.question.domain, assess.categoryScore(a.question.domain))
                                     ),
                                     <.td(
-                                        boxedScoreFaceHtml(a.value.asDouble)
+                                        boxedScoreFaceHtml(Some(a.value.asDouble))
                                     ),
                                     <.td(
                                         if a.confidence.low then <.span(^.cls := "material-symbols-outlined", "question_mark") else " "

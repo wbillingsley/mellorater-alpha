@@ -26,13 +26,15 @@ val bgWhite = Styling("background: white;").register()
 def rosetteAndSides(rosette:svg.DSvgContent)(data: Map[Domain, (String, svg.DSvgContent)]) = 
     import svg.*
 
-    val gap = 10
+    val hgap = 10
+    val gaps = Seq(10, 10)
     val boxW = 500
-    val boxH = 100
-    val circleR = 180
+    val boxH = Seq(104, 146, 104)
+    val boxVPad = Seq(2, 23, 2)
+    val circleR = 170
 
-    val width = 2 * boxW + gap // Width of the stack of rectangles
-    val height = 3 * boxH + 2 * gap // Height of the stack of rectangles
+    val width = 2 * boxW + hgap // Width of the stack of rectangles
+    val height = boxH.sum + gaps.sum // Height of the stack of rectangles
     val centreX = width / 2 // centre of the stack of rectangles
     val centreY = height / 2 // centre of the stack of rectangles
 
@@ -40,7 +42,7 @@ def rosetteAndSides(rosette:svg.DSvgContent)(data: Map[Domain, (String, svg.DSvg
     val svgHeight = Math.max(height, 2 * circleR + 10)
 
     // The central box fits into the central circle
-    val centreH = boxH 
+    val centreH = 100
     val centreW = (Math.sqrt(Math.pow(circleR, 2) - Math.pow(centreH / 2, 2)) * 2).toInt
 
     def emptyContent = SVG.g()
@@ -50,17 +52,17 @@ def rosetteAndSides(rosette:svg.DSvgContent)(data: Map[Domain, (String, svg.DSvg
     def stackBoxes(data: Seq[(Domain, (String, DSvgContent))], left:Boolean) = {
         (for 
             ((domain, (col, content)), index) <- data.zipWithIndex            
-        yield g(^.attr.transform := s"translate(${(if left then 0 else boxW + gap)}, ${(index * (boxH + gap))})",
-            sparkbox(col, boxW, boxH)(
+        yield g(^.attr.transform := s"translate(${(if left then 0 else boxW + hgap)}, ${boxH.slice(0, index).sum + gaps.slice(0, index).sum })",
+            sparkbox(col, boxW, boxH(index))(
                 ^.attr("x") := 0,//(if left then 0 else boxW + gap), 
                 ^.attr("y") := 0, //(index * (boxH + gap)),
                 ^.attr.style := s"fill: $cream"
             ),
-            domainLogoSvg(domain)(^.style := s"fill: $darkCream; font-size: 55px;", ^.attr("text-anchor") := "middle", ^.attr("dominant-baseline") := "middle", 
-                ^.attr.y := boxH / 2 + 5, //(index * (boxH + gap)) + boxH / 2 + 5,
+            domainLogoSvg(domain)(^.style := s"fill: $darkCream; font-size: 55px; dominant-baseline: central; text-anchor: middle;",  
+                ^.attr.y := boxH(index) / 2, 
                 ^.attr.x := (if left then 40 else boxW - 40)
             ),
-            g(^.attr.transform := s"translate(${if left then boxW - 180 else 180}, 0) scale(${if left then -1 else 1}, 1) ",
+            g(^.attr.transform := s"translate(${if left then boxW - 180 else 180}, ${boxVPad(index)}) scale(${if left then -1 else 1}, 1) ",
                 content
             )
             // foreignObject(
@@ -73,11 +75,11 @@ def rosetteAndSides(rosette:svg.DSvgContent)(data: Map[Domain, (String, svg.DSvg
 
     def stackMask(alignLeft:Boolean) = {
         for 
-            index <- 0 to 3
+            index <- 0 until 3
         yield 
-            sparkbox("white", boxW, boxH)(
-                ^.attr("x") := (if alignLeft then 0 else boxW + gap), 
-                ^.attr("y") := (index * (boxH + gap)),
+            sparkbox("white", boxW, boxH(index))(
+                ^.attr("x") := (if alignLeft then 0 else boxW + hgap), 
+                ^.attr("y") := (boxH.slice(0, index).sum + gaps.slice(0, index).sum),
             )
     }
 
@@ -107,7 +109,7 @@ def rosetteAndSides(rosette:svg.DSvgContent)(data: Map[Domain, (String, svg.DSvg
                 for d <- Seq(Domain.InteractionsEnvironment, Domain.InteractionsSocial, Domain.InteractionsHuman) yield d -> data.getOrElse(d, (emptyCol, emptyContent)),
                 false
             ),
-            g(^.attr.transform := "translate(505, 160)",
+            g(^.attr.transform := s"translate($centreX, $centreY)",
               rosette            
             )
         )
@@ -117,20 +119,13 @@ def rosetteAndSides(rosette:svg.DSvgContent)(data: Map[Domain, (String, svg.DSvg
 /** A sevenBox containing just the text of one survey */
 def scoringRose(assessments:Seq[Assessment]) =
     import html.* 
-    def score(a:Assessment, d:Domain):(String, VHtmlContent) = 
-        val avg = a.average(d)
-        val col = scoreColor(avg)
-
-        col -> <.div(^.style := "text-align: center", 
-            <.label(^.cls := (fiveboxtext), scoreText(avg))
-        )
 
     val ros = assessments.headOption match {
         case Some(a) => 
             rosette(((for 
                 d <- Domain.scoredDomains 
             yield 
-                d -> (Seq(^.style := s"fill: ${scoreColor(a.categoryScore(d))}"), Seq(domainLogoSvg(d)(^.style := "fill: white; font-size: 55px;", ^.attr("text-anchor") := "middle", ^.attr("dominant-baseline") := "middle")))
+                d -> (Seq(^.style := s"fill: ${scoreColor(a.categoryScore(d))}"), Seq(domainLogoSvg(d)(^.style := "fill: white; font-size: 55px; text-anchor: middle; dominant-baseline: central;")))
             ) :+ (
                 Domain.Mental -> (Seq(^.style := s"fill: $cream"), Seq(colouredScoreFace(a.overallScore)(^.attr.width := 100, ^.attr.height := 100, ^.attr.x := -50, ^.attr.y := -50)))            
             )).toMap)
@@ -138,7 +133,7 @@ def scoringRose(assessments:Seq[Assessment]) =
             rosette(((for 
                 d <- Domain.scoredDomains 
             yield 
-                d -> (Seq(^.style := s"fill: $darkCream"), Seq(domainLogoSvg(d)(^.style := "fill: white; font-size: 55px;", ^.attr("text-anchor") := "middle", ^.attr("dominant-baseline") := "middle")))
+                d -> (Seq(^.style := s"fill: $darkCream"), Seq(domainLogoSvg(d)(^.style := "fill: white; font-size: 55px; text-anchor: middle; dominant-baseline: central;")))
             ) :+ (
                 Domain.Mental -> (Seq(^.style := s"fill: $cream"), Seq(neutral("darkCream")(^.attr.width := 100, ^.attr.height := 100, ^.attr.x := -50, ^.attr.y := -50)))
             )).toMap)
@@ -147,10 +142,24 @@ def scoringRose(assessments:Seq[Assessment]) =
 
     rosetteAndSides(ros)((for d <- Domain.values yield d -> ("", domainTrack(d, assessments))).toMap)(^.style := "")
 
+
+// def rosetteInProgress(assessment:Assessment, activeDomain:Domain) = 
+//     import html.* 
+
+//     rosette(((for 
+//                 d <- Domain.scoredDomains 
+//             yield 
+//                 d -> (Seq(^.style := s"fill: ${scoreColor(a.categoryScore(d))}"), Seq(domainLogoSvg(d)(^.style := "fill: white; font-size: 55px;", ^.attr("text-anchor") := "middle", ^.attr("dominant-baseline") := "middle")))
+//             ) :+ (
+//                 Domain.Mental -> (Seq(^.style := s"fill: $cream"), Seq(colouredScoreFace(a.overallScore)(^.attr.width := 100, ^.attr.height := 100, ^.attr.x := -50, ^.attr.y := -50)))            
+//             )).toMap)
+
+
 val rosetteStyling = Styling(
     """|
        |""".stripMargin
 ).modifiedBy(
+    " .domain-track-logo" -> "fill: white; font-size: 55px; text-anchor: middle; dominant-baseline: central;",
     "  .segment-path" -> "stroke: white; stroke-width: 7",
     "  .segment-path.dimmed" -> s"fill: $cream"
     // " .segment" -> "filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.7));",
@@ -217,9 +226,9 @@ def rosetteSegment(num:Int)(mods: svg.DSvgModifier*)(content: svg.DSvgModifier*)
     val sin = Math.sin(rad)
     val cos = Math.cos(rad)
     val innerR = 70
-    val outerR = 180
+    val outerR = 170
 
-    val centerPoint = 129
+    val centerPoint = 125
 
     val cx = Math.sin(Math.PI / 6) * centerPoint 
     val cy = -Math.cos(Math.PI / 6) * centerPoint

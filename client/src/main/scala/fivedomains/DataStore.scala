@@ -3,7 +3,10 @@ package fivedomains
 import scala.collection.mutable
 import com.wbillingsley.veautiful.PushVariable
 
-import org.scalajs.dom.window.localStorage 
+import org.scalajs.dom.window
+import window.localStorage 
+import window.console
+
 import model.{given, *}
 
 // Pickling library, for stringifying data to store in localStorage
@@ -14,6 +17,7 @@ import typings.std.stdStrings.a
 
 import fivedomains.model.Confidence
 import java.util.UUID
+import com.wbillingsley.veautiful.logging.Logger
 
 
 
@@ -75,8 +79,14 @@ object DataStore {
         val stored = Option(localStorage.getItem("assessments"))
         stored match {
             case Some(json) =>
-                val parsed = read[Seq[Assessment]](json) 
-                parsed.to(mutable.Buffer)
+                try {
+                    val parsed = read[Seq[Assessment]](json) 
+                    parsed.to(mutable.Buffer)
+                } catch {
+                    case x:Throwable => 
+                        console.error(x)
+                        mutable.Buffer.empty
+                }
                 //mutable.Buffer.empty[Assessment]
             case None => 
                 mutable.Buffer.empty[Assessment]

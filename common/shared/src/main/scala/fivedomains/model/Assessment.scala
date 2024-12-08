@@ -31,7 +31,10 @@ case class Assessment(animal:AnimalId, situation:Situation, time:Double, answers
             Math.min(avgScore, minScore + 20)
 
     def answersInDomain(d:Domain) = 
-        answers.values.filter { (a) => flattenedQs.find(_.num == a.q).map(_.domain).contains(d) }
+        for 
+            q <- domainQuestions(d)
+            a <- answers.get(q.num)
+        yield a
 
     /** Whether all the questions in a domain have been completed */
     def completed(d:Domain):Boolean = 

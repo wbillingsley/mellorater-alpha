@@ -95,7 +95,7 @@ def pastRedFlags(assessments:Seq[Assessment], mode:AnswerFilter):DHtmlModifier =
 
                                         for n <- a.note yield <.p(^.style := "font-style: italic;", n),
 
-                                        <.div(^.style := "font-variant: all-small-caps",
+                                        <.div(
                                             feedback(animal, assess, QuestionIdentifier.fromOrdinal(a.q))
                                         )
 

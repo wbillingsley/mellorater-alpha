@@ -359,10 +359,11 @@ val patterns = Map(
 
 
 def background(pattern:String) = Styling(
-    s"""|background-image: linear-gradient(to right, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.93) 2%, rgba(255, 255, 255, 0.93) 98%, rgba(255, 255, 255, 0.5)),
-        |                   url("data:image/svg+xml,$pattern");
-        |background-position: left, right;
-        |""".stripMargin, 
+    // s"""|background-image: linear-gradient(to right, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.93) 2%, rgba(255, 255, 255, 0.93) 98%, rgba(255, 255, 255, 0.5)),
+    //     |                   url("data:image/svg+xml,$pattern");
+    //     |background-position: left, right;
+    //     |""".stripMargin, 
+    ""
 )
 
 val backgrounds = Map(

@@ -153,7 +153,7 @@ def scoringInProgress(assessment:Assessment, activeDomain:Domain) =
                 if d == activeDomain then 
                     d -> (Seq(^.style := s"fill: cornflowerblue;"), Seq(domainLogoSvg(d, classes="domain-rosette-logo")))
                 else 
-                    d -> (Seq(^.style := s"fill: lightGray;"), Seq(domainLogoSvg(d, classes="domain-rosette-logo")))
+                    d -> (Seq(^.style := s"fill: ${scoreColor(assessment.categoryScore(d))}"), Seq(domainLogoSvg(d, classes="domain-rosette-logo")))
             ) :+ (
                 Domain.Mental -> (Seq(^.style := s"fill: $cream"), Seq.empty)            
             )).toMap)

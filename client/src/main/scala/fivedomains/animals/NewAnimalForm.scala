@@ -50,7 +50,7 @@ class AnimalForm() extends DHtmlComponent {
                         val n = e.target.asInstanceOf[scalajs.js.Dynamic].value.asInstanceOf[String]
                         animal.value = animal.value.copy(species = Species.values(n.toInt)) 
                     },
-                    for s <- Species.values yield 
+                    for s <- Species.beta yield 
                         <.option(
                             ^.prop.value := s.ordinal, s.longText,
                             if s.longText == animal.value.species.longText then ^.prop.selected := "selected" else None
@@ -94,9 +94,14 @@ def emptyAnimalsNotice = if DataStore.hasRealData then <.div() else <.div(^.cls 
     markdown.div(
         """|### Let's add your first animal
            |
-           |Mostly, the app just needs to know your animal's name and species.
-           |However, you can also pick a card background to help you tell them apart at a glance
-           |until we've added a photo feature.
+           |Mostly, the app just needs to know your animal's name and species, so that it 
+           |can ask you about your animal as you monitor its wellbeing. 
+           |
+           |The other questions (e.g. sex and breed) are optional, but may be useful for 
+           |users who own multiple animals.
+           |
+           |Future versions of the app will let you add a photo too.
+           |
            |""".stripMargin
     )
 )

@@ -214,7 +214,7 @@ val animalName = Styling(
 ).register()
 
 val notice = Styling(
-    s"font-size: $smallFont; margin: 1em; border-radius: 0.25em; padding: 1em; border: 1px solid $noticeFg; color: $noticeFg; background: $noticeBg; max-height: 1000px;"
+    s"font-size: $smallFont; margin: 1em; border-radius: 0.25em; padding: 1em; color: $noticeFg;  max-height: 1000px;"
 ).register()
 
 val noticeButton = Styling(

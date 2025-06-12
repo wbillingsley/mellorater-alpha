@@ -86,7 +86,6 @@ enum Species(val longText:String, val plural:String = "animals of their own spec
     case Rat extends Species("Rodent - Rat")
     case Wolf extends Species("Wolf")
 
-    def beta = Seq(Horse, Dog, Cat)
 
 object Species:
     /** As there's more than 32 species, we can't just derive a readwriter using the macros */
@@ -94,3 +93,5 @@ object Species:
         s => s.longText,
         text => Species.values.find(_.longText == text).getOrElse(Species.Unknown)
     )
+
+    def beta = Seq(Horse, Dog, Cat)

@@ -19,7 +19,7 @@ val formStyling = Styling(
 
 class AnimalForm() extends DHtmlComponent {
 
-    val animal = stateVariable(Animal(DataStore.nextAnimalId, "Almeira", Species.Horse))
+    val animal = stateVariable(Animal(DataStore.nextAnimalId, "", Species.Horse))
 
     def add():Unit = 
         DataStore.addAnimal(animal.value)
@@ -29,7 +29,7 @@ class AnimalForm() extends DHtmlComponent {
         leftBlockHeader(
             Router.path(AppRoute.Front),
             "Add an animal",
-            <.label(^.cls := (animalName), animal.value.name)
+            <.label(^.cls := (animalName), if animal.value.name.nonEmpty then animal.value.name else "New Animal")
         ),
 
         emptyAnimalsNotice,
@@ -39,7 +39,7 @@ class AnimalForm() extends DHtmlComponent {
             <.div(^.cls := formStyling,
                 <.label("Name"),
                 <.input(^.style := s"margin-left: 0.25em; font-size: $largeFont;",
-                    ^.prop("value") := animal.value.name, 
+                    ^.prop("value") := animal.value.name, ^.prop.placeholder := "Animal name",
                     ^.on("input") ==> { e => for n <- e.inputValue do animal.value = animal.value.copy(name = n) }
                 )
             ),
@@ -74,22 +74,13 @@ class AnimalForm() extends DHtmlComponent {
                     },
                     for s <- Sex.values yield 
                         <.option(
-                            ^.prop.value := s.ordinal, s.toString,
+                            ^.prop.value := s.ordinal, s.prettyString,
                             if s == animal.value.sex then ^.prop.selected := "selected" else None
                         )
                 )
             ),
 
-            <.ul(^.style := "list-item: none; padding: 0;",
-                for displayStyle <- DisplayStyle.values yield
-                    <.li(^.style := "display: inline-block; margin: 1em;",
-                        <.input(^.attr("id") := displayStyle.toString, ^.attr("type") := "radio", 
-                            ^.prop("checked") := (if displayStyle == animal.value.display then "true" else ""), 
-                            ^.onClick --> (animal.value = animal.value.copy(display=displayStyle))
-                        ),
-                        <.label(^.attr("for") := displayStyle.toString, ^.cls := (patterns(displayStyle)), ^.style := "display: inline-block; width: 40px; height: 40px; vertical-align: middle;"),
-                    )
-            ),
+
             <.div(^.style := "text-align: right;",
                 <.button(^.cls := (button), "📷"),
                 <.button(^.cls := (button, noticeButton), "Add", ^.onClick --> add())

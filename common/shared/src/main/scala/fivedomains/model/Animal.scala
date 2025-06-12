@@ -29,7 +29,18 @@ object AnimalId {
 enum Sex derives ReadWriter:
     case Male
     case Female
+    case MaleNeutered
+    case FemaleNeutered
     case Unspecified
+
+
+extension (s:Sex) {
+    def prettyString = s match
+        case Sex.MaleNeutered => "Male neutered"
+        case Sex.FemaleNeutered => "Female neutered"
+        case _ => s.toString
+    
+}
 
 case class Animal(
     id:AnimalId, 
@@ -40,6 +51,9 @@ case class Animal(
     desexed:Option[Long] = None,
     display:DisplayStyle = DisplayStyle.random,
     testData:Boolean = false
-) 
+) {
+
+    def displayName = if name.nonEmpty then name else "Unnamed animal"
+}
 
 

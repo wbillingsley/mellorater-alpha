@@ -14,7 +14,7 @@ def summaryCard(animal:Animal) =
         ^.cls := (card, backgrounds(animal.display)),
         <.div(
             <.a(^.cls := "title", ^.href := Router.path(AppRoute.Animal(animal.id)), 
-                <.label(^.cls := (animalName), animal.name)
+                <.label(^.cls := (animalName), animal.displayName)
             ),
 
             <.div(^.attr.style := "float: right;",

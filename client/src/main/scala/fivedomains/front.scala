@@ -56,24 +56,39 @@ object AnimalList extends DHtmlComponent {
                         for a <- sortedAnimals.filter(!_.testData) yield animals.summaryCard(a)
                     )
                 else 
-                    if hasTest then 
-                        <.p("It looks like you haven't added any animals yet. Some demo data is shown below.")
+                    if hasTest then
+                        <.div(^.cls := (notice),
+                            <.h3("It's time to add your first animal"),
+                            <.p("It looks like you haven't added any real animals yet. Click the button below to add your first animal.")
+                        )                         
                     else 
-                        <.p("It looks ike you haven't added any animals yet. Add your first animal, or some demo animals can be added from the settings screen.")
-                ),
-                (if hasTest then <.div(
-                    <.h4("Demo animals:"),                
-                    <.div(
-                        for a <- sortedAnimals.filter(_.testData) yield animals.summaryCard(a)
-                    )
-                ) else 
-                    <.span()
-                ),
+                        <.div(^.cls := (notice),    
+                            <.h3("It's time to add your first animal"),
+                            <.p("This page will show the summary cards for your animals, but it looks ike you haven't added any animals yet. Click the button below to add your first animal")
+                        )
+                        
+                )
             ),
 
             <.p(^.style := "margin-top: 1em; text-align: center;",
                 <.a(^.cls := (button, primary), ^.href := Router.path(AppRoute.AddAnimal), "Add an animal")
-            )
+            ),
+
+            (if hasTest then <.div(
+                <.div(^.cls := (notice),
+                    <.h4("Demo animals:"),
+                    <.p("These are demo animals so you can see what an assessed animal looks like. You can remove these demo animals from the settings screen."),                
+                ),
+                <.div(
+                    for a <- sortedAnimals.filter(_.testData) yield animals.summaryCard(a)
+                )
+            ) else 
+                <.span()
+            ),
+
+            if !hasReal && !hasTest then 
+                <.p(^.cls := (notice), "Hint: If you want to add some demo animals, just to see what assessed animals look like, you can add some from the Settings screen.")
+            else None
         )
 
 }

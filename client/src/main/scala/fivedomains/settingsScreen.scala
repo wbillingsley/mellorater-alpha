@@ -3,6 +3,7 @@ package fivedomains
 import com.wbillingsley.veautiful.*
 import html.{VHtmlContent, Styling, DHtmlComponent, Animator}
 import fivedomains.testdata.addPickles
+import fivedomains.DataStore.hasTestData
 
 object SettingsScreen extends DHtmlComponent {
     import html.{<, ^}
@@ -73,7 +74,6 @@ case class ResetData() extends DHtmlComponent {
 
     def reset() = 
         DataStore.clearAll()
-        addPickles()
         enabled.value = false
 
     override def render = {
@@ -95,6 +95,51 @@ case class ResetData() extends DHtmlComponent {
 }
 
 
+/** A widget for adding or removing demo animals */
+case class DemoData() extends DHtmlComponent {
+
+    def clear() = 
+        DataStore.clearDemoAnimals()
+        enabled.value = false
+
+    def add() = 
+        addPickles()
+        enabled.value = false
+
+    val enabled = stateVariable(false)
+
+
+    override def render = {
+        import html.{<, ^}
+
+            if hasTestData then 
+                <.div(
+                        <.p(
+                        """|To remove the demo animals, click the button below. You can re-add the demo animals again afterwards, but any assessments
+                           |you've made of them will be lost.
+                        |""".stripMargin
+                        ),
+
+                        <.input(^.attr("type") := "checkbox", ^.prop.checked := enabled.value, ^.onChange --> { enabled.value = !enabled.value}),
+                        <.label("Tick to unlock"),
+                        <.button(^.cls := (button, noticeButton), ^.prop.disabled := !enabled.value, "Clear demo animals", ^.onClick --> clear())
+                )
+
+            else
+                <.div(
+                        <.p(
+                        """|The app can add some demo animals for you. It marks them as not being real animals, so they're easy to remove later.
+                        |""".stripMargin
+                        ),
+
+                        <.input(^.attr("type") := "checkbox", ^.prop.checked := enabled.value, ^.onChange --> { enabled.value = !enabled.value}),
+                        <.label("Tick to unlock"),
+                        <.button(^.cls := (button, noticeButton), ^.prop.disabled := !enabled.value, "Add demo anials", ^.onClick --> add())
+                )
+    }
+
+}
+
 def settingsPage = 
     import html.* 
     <.div(
@@ -115,6 +160,7 @@ def settingsPage =
 
         <.h2("Data"),
         ResetData(),
+        DemoData()
 
         
         )

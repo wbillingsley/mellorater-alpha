@@ -15,7 +15,6 @@ import installers.installMarked
 val root = mount("#app", <.p("Loading..."))
 
 import typings.marked.mod.marked
-import fivedomains.testdata.addPickles
 
 given markdown:Markup = Markup(marked(_))
 
@@ -28,8 +27,6 @@ given styleSuite:StyleSuite = StyleSuite()
 @main def main = {
 
   dom.console.info("Site code loaded. Starting Mellorater.")
-
-  if DataStore.animalMap.isEmpty then addPickles()
 
   styleSuite.install()
 

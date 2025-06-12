@@ -125,4 +125,16 @@ object DataStore {
         localStorage.setItem("assessments", write(assessments))
         localStorage.setItem("animalMap", write(animalMap))
 
+    def clearDemoAnimals() = 
+        // Only keep assessments from non-test animals
+        val keepAssessments = _assessments.filter((as) => animalMap.get(as.animal).exists(!_.testData))
+        _assessments.clear()
+        _assessments.appendAll(keepAssessments)
+        localStorage.setItem("assessments", write(assessments))
+
+        val keepAnimals = animalMap.filter((id, a) => !a.testData)
+        animalMap.clear()
+        animalMap.addAll(keepAnimals)
+        localStorage.setItem("animalMap", write(animalMap))
+
 }

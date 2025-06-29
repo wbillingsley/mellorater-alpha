@@ -2,6 +2,7 @@ package fivedomains
 
 import com.wbillingsley.veautiful.*
 import html.{Styling, VHtmlContent, DHtmlComponent}
+import typings.std.stdStrings.mark
 
 object AnimalList extends DHtmlComponent {
     import html.{<, ^}
@@ -99,13 +100,26 @@ case class SensitiveTopicNotice() extends DHtmlComponent {
     val save = stateVariable(true)
 
     def render = <.div(^.cls := (notice),
-        <.h3("Sensitive topics"),
-        <.p("This app will help you to monitor your animals' welfare using the \"Five Domains\" model of nutrition, environment, health, behaviour and the mental domain."),
-        <.p("At times, this may involve showing how an animal's welfare has declined as well as how it has improved. Some people may find it distressing to see an animal in decline."),
+
+        markdown.div("""
+        |## Before You Begin
+        |
+        |This app helps you assess your animal's welfare using the Five Domains Model: nutrition, environment, health, behaviour, and mental state.
+        |
+        |At times, your assessment may highlight signs of welfare compromise as well as improvement. Some users may find it distressing to recognise signs of decline.
+        |
+        |Participation is voluntary. By continuing, you are telling us that you have read the information provided and that you voluntarily agree to take part in the research. You will also be asked to confirm whether or not you consent to your anonymous responses being used for research aimed at improving animal welfare tools. No personal information is collected.
+        |
+        |You can stop at any time. You can also withdraw your consent to participate in the research or to send data via the app's settings.
+        |
+        |For more information, tap [More Info] to read the full Participant Information Sheet and Consent Form.
+        |
+        |""".stripMargin),
         <.div(^.style := "text-align: right;",
             <.input(^.attr("id") := "dont-show-senstop-again", ^.attr.`type` := "checkbox", ^.prop.checked := save.value, ^.onChange --> { save.value = !save.value }), 
             <.label(^.attr("for") := "dont-show-senstop-again", "Don't show this again "),
-            <.button(^.cls := (button, noticeButton), "Accept", ^.onClick --> { DataStore.acceptSensitiveTopics(save.value) })
+            <.button(^.cls := (button, noticeButton), "Continue", ^.onClick --> { DataStore.acceptSensitiveTopics(save.value) }),
+            <.a(^.cls := (button, infoButton), "More Info", ^.href := "https://www.mellorater.org/research-consent")
         )
     )
 

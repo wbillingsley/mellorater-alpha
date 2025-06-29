@@ -217,6 +217,14 @@ val notice = Styling(
     s"font-size: $smallFont; margin: 1em; border-radius: 0.25em; padding: 1em; color: $noticeFg;  max-height: 1000px;"
 ).register()
 
+val infoButton = Styling(
+   s"color: white; background: grey;"
+).modifiedBy(
+    ":hover" -> "filter: brightness(85%);",
+        ":disabled,:hover:disabled" -> "filter: opacity(35%);"
+).register()
+
+
 val noticeButton = Styling(
    s"color: white; background: $noticeFg;"
 ).modifiedBy(
